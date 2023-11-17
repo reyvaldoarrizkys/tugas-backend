@@ -4,20 +4,86 @@ namespace App\Http\Controllers;
 
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Validator;
 
 class StudentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $students = Student::all();
-        $data = [
-            'message' => 'Get All Students',
-            'data' => $students
-        ];
-        return response()->json($data, 200);
+        // $students = Student::all();
+        // $data = [
+        //     'message' => 'Get All Students',
+        //     'data' => $students
+        // ];
+        // return response()->json($data, 200);
+        try {
+            $students = Student::all();
+
+            $order = (isset($request->order)) ? $request->order : NULL;
+            if ($order == NULL) {
+                $order = 'asc';
+            }
+            $sort = (isset($request->sort)) ? $request->sort : NULL;
+            if ($sort == NULL) {
+                $sort = 'nama';
+            }
+            $pageSize = (isset($request->page_size)) ? $request->page_size : 5;
+            $pageNumber = (isset($request->page_number)) ? $request->page_number : 1;
+            $offset = ($pageNumber - 1) * $pageSize;
+            $pages = [];
+            $pages['pageSize'] = (int) $pageSize;
+            $pages['pageNumber'] = (int) $pageNumber;
+
+            $students = Student::query();
+            $name = (isset($request->nama)) ? $request->nama : NULL;
+            if ($name != NULL) {
+                $students = $students->where('nama', $name);
+            }
+
+            $students = $students->orderBy($sort, $order)->offset($offset)
+                ->limit($pageSize)->get();
+
+            // get total
+            $studentTotal = Student::query();
+            $name = (isset($request->nama)) ? $request->nama : NULL;
+            if ($name != NULL) {
+                $studentTotal = $studentTotal->where('nama', $name);
+            }
+
+            $pageSize = (isset($request->page_size)) ? $request->page_size : 5;
+            $pageNumber = (isset($request->page_number)) ? $request->page_number : 1;
+            $offset = ($pageNumber - 1) * $pageSize;
+
+            $studentTotal = $studentTotal->count();
+            ;
+
+            $pages['totalData'] = $studentTotal;
+            $totalPage = ceil($studentTotal / $pageSize);
+            $pages['totalPage'] = $totalPage;
+
+            $data = [];
+            $data['pages'] = $pages;
+            $data['table'] = $students;
+
+            if (count($students) > 0) {
+                $result = [
+                    "message" => "get all students",
+                    "data" => $data
+                ];
+            } else {
+                $result = [
+                    'message' => "data not found"
+                ];
+            }
+
+            return response()->json($result, 200);
+
+        } catch (\Throwable $th) {
+            return response()->json(["message" => "error", "error" => $th], 500);
+        }
     }
 
     /**
@@ -25,14 +91,15 @@ class StudentController extends Controller
      */
     public function store(Request $request)
     {
-        $input = [
-            'nama' => $request->nama,
-            'nim' => $request->nim,
-            'email' => $request->email,
-            'jurusan' => $request->jurusan,
-        ];
+        $validated = $request->validate([
+            'nama' => 'required',
+            'nim' => 'required|numeric',
+            'email' => 'required|email',
+            'jurusan' => 'required',
+        ]);
+
         #menggunakan model student untuk insert data
-        $student = Student::create($input);
+        $student = Student::create($validated);
 
         $data = [
             'message' => 'Student is Created Successfully',

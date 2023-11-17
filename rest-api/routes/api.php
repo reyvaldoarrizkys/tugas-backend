@@ -1,6 +1,7 @@
 <?php
 
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AnimalsController;
@@ -26,8 +27,11 @@ Route::post("/animals", [AnimalsController::class,"store"]);
 Route::put("/animals/{id}", [AnimalsController::class,"update"]);
 Route::delete("/animals/{id}", [AnimalsController::class,"destroy"]);
 
-Route::get("/students", [StudentController::class,"index"]);
+Route::get("/students", [StudentController::class,"index"])->middleware('auth:sanctum');
 Route::post("/students", [StudentController::class,"store"]);
 Route::put("/students/{id}", [StudentController::class,"update"]);
 Route::delete("/students/{id}", [StudentController::class,"destroy"]);
 Route::get("/students/{id}", [StudentController::class,"show"]);
+
+Route::post("/register", [AuthController::class,"register"]);
+Route::post("/login", [AuthController::class,"login"]);
