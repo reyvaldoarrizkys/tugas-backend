@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use Validator;
+use Illuminate\Validation\Rule;
 
 class PatientController extends Controller
 {
@@ -76,7 +77,7 @@ class PatientController extends Controller
             'name' => 'required',
             'phone' => 'required|numeric',
             'address' => 'required',
-            'status' => 'required',
+            'status' => 'required|in:positif,sembuh,meninggal',
             'in_date_at' => 'required|date',
             'out_date_at' => 'required|date',
         ]);
